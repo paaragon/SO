@@ -223,7 +223,7 @@ int createTar(int nFiles, char *fileNames[], char tarName[]) {
 	
 	fclose(file);
 	
-	printf("\nFichero mitar creado con exito.\n\n");
+	printf("\nFichero mytar creado con exito.\n\n");
 	
 	return EXIT_SUCCESS;
 }
@@ -272,7 +272,7 @@ int extractTar(char tarName[]) {
 	
 	fclose(tarFile);
 	
-	printf("\nFichero mitar extraido con exito.\n\n");
+	printf("\nFichero mytar extraido con exito.\n\n");
 	
 	return EXIT_SUCCESS;
 }
