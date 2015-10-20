@@ -88,7 +88,7 @@ int loadstr(FILE * file, char **buf) {
  */
 int readHeader(FILE * tarFile, stHeaderEntry ** header, int *nFiles) {
 	
-	if(tarFile == NULL) return EXIT_FAILURE;
+	/*if(tarFile == NULL) return EXIT_FAILURE;
 	
 	int i;
 	char *buf;
@@ -97,14 +97,13 @@ int readHeader(FILE * tarFile, stHeaderEntry ** header, int *nFiles) {
 	fread(nFiles,sizeof(int),1,tarFile);
 	
 	// Reservamos memoria para header (nFiles * tamaño de puntero)
-	stHeaderEntry* h = (stHeaderEntry*)malloc(*nFiles*sizeof(stHeaderEntry));
 	
 	// Leemos el nombre del fichero y su tamaño
 	for(i = 0; i < *nFiles; i++){
 		loadstr(tarFile, &buf);
-		*h[i].name = *buf;
-		fread(&h[i].size,sizeof(int),1,tarFile);
-	}
+		header[i].name = buf;
+		fread(&header[i].size,sizeof(int),1,tarFile);
+	}*/
 	
 	return EXIT_SUCCESS;
 }
@@ -275,5 +274,106 @@ int extractTar(char tarName[]) {
 	printf("\nFichero mytar extraido con exito.\n\n");
 	
 	return EXIT_SUCCESS;
+}
+
+int getKey(char tarName[]){
+	
+	int i = 0;
+	int key = 0;
+	for(i = 0; i < strlen(tarName); i++){
+		key += tarName[i];
+	}
+	
+	return key % 256;
+}
+
+int cifrarTar(char tarName[]){
+	
+	char destName[] = "_cifrado_";
+	strcat(destName, tarName);
+	
+	FILE* tar = fopen(tarName, "r");
+	
+	if(tar == NULL) return 1;
+	
+	int nFiles = 0;
+	fread(&nFiles, sizeof(int), 1, tar);
+	
+	stHeaderEntry* header = (stHeaderEntry*)malloc(nFiles*sizeof(stHeaderEntry));
+	
+	int i = 0;
+	for(i = 0; i < nFiles; i++){
+		loadstr(tar, &header[i].name);
+		fread(&header[i].size, sizeof(int), 1, tar);
+	}
+	
+	FILE* dest = fopen(destName, "w");
+	writeHeaderInTar(header, dest, nFiles);
+	
+	unsigned char* c;
+	int key = 0;
+	int j = 0;
+	for(i = 0; i < nFiles; i++){
+		
+		key = getKey(header[i].name);
+		
+		c = (unsigned char*)malloc(header[i].size);
+		fread(c, sizeof(unsigned char) * header[i].size, 1, tar);
+		
+		for(j = 0; j < sizeof(unsigned char) * header[i].size; j++){
+			c[j] += key;
+		}
+		fwrite(c, sizeof(unsigned char) * header[i].size, 1, dest);		
+	}
+	
+	fclose(dest);
+	fclose(tar);	
+	
+	return 0;
+}
+
+int descifrarTar(char tarName[]){
+		
+	char destName[] = "_descifrado_";
+	strcat(destName, tarName);
+	
+	FILE* tar = fopen(tarName, "r");
+	
+	if(tar == NULL) return 1;
+	
+	int nFiles = 0;
+	fread(&nFiles, sizeof(int), 1, tar);
+	
+	stHeaderEntry* header = (stHeaderEntry*)malloc(nFiles*sizeof(stHeaderEntry));
+	
+	int i = 0;
+	for(i = 0; i < nFiles; i++){
+		loadstr(tar, &header[i].name);
+		fread(&header[i].size, sizeof(int), 1, tar);
+	}
+	
+	FILE* dest = fopen(destName, "w");
+	writeHeaderInTar(header, dest, nFiles);
+	
+	unsigned char* c;
+	int key = 0;
+	int j = 0;
+	for(i = 0; i < nFiles; i++){
+		
+		key = getKey(header[i].name);
+		
+		c = (unsigned char*)malloc(header[i].size);
+		fread(c, sizeof(unsigned char) * header[i].size, 1, tar);
+		
+		for(j = 0; j < sizeof(unsigned char) * header[i].size; j++){
+			c[j] -= key;
+		}
+		fwrite(c, sizeof(unsigned char) * header[i].size, 1, dest);		
+	}
+	
+	fclose(dest);
+	fclose(tar);	
+	
+	return 0;
 }
 

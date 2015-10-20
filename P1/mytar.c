@@ -4,7 +4,7 @@
        
 #include "mytar.h"
        
-char use[]="Usage: tar -c|x -f file_mytar [file1 file2 ...]\n";
+char use[]="Usage: tar -c|x|e -f file_mytar [file1 file2 ...]\n";
 
 int main(int argc, char *argv[]) {
 
@@ -18,13 +18,19 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
   //Parse command-line options
-  while((opt = getopt(argc, argv, "cxf:")) != -1) {
+  while((opt = getopt(argc, argv, "cxedf:")) != -1) {
     switch(opt) {
       case 'c':
         flag=(flag==NONE)?CREATE:ERROR;
         break;
       case 'x':
         flag=(flag==NONE)?EXTRACT:ERROR;
+        break;
+      case 'e':
+        flag=(flag==NONE)?CIFRAR:ERROR;
+        break;
+      case 'd':
+        flag=(flag==NONE)?DESCIFRAR:ERROR;
         break;
       case 'f':
         tarName = optarg;
@@ -53,12 +59,26 @@ int main(int argc, char *argv[]) {
     case CREATE:
       retCode=createTar(nExtra, &argv[optind], tarName);
       break;
-    case EXTRACT:
+     case EXTRACT:
       if(nExtra!=0){
         fprintf(stderr,"%s",use);
         exit(EXIT_FAILURE);
       }
       retCode=extractTar(tarName);
+      break;
+   case CIFRAR:
+      if(nExtra!=0){
+        fprintf(stderr,"%s",use);
+        exit(EXIT_FAILURE);
+      }
+      retCode=cifrarTar(tarName);
+      break;
+   case DESCIFRAR:
+      if(nExtra!=0){
+        fprintf(stderr,"%s",use);
+        exit(EXIT_FAILURE);
+      }
+      retCode=descifrarTar(tarName);
       break;
     default:
       retCode=EXIT_FAILURE;
