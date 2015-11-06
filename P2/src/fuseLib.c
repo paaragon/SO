@@ -469,6 +469,39 @@ static int my_truncate(const char *path, off_t size) {
 	return 0;
 }
 
+static int my_unlink(const char *path){
+	
+	int idxNode;
+	
+	if((idxNode = findFileByName(&myFileSystem, (char *)path + 1)) == -1){ // Buscar path en el directorio del SF
+		return -ENOENT;
+	}
+	
+	resizeNode(idxNode, 0); // truncar el fichero
+	
+	myFileSystem.directory.files[idxNode].freeFile = true; // Liberamos el archivo del directorio
+	myFileSystem.directory.numFiles--; // Actualizamos el contador de archivos del directorio
+	
+	NodeStruct *node = myFileSystem.nodes[idxNode];
+	node->freeNode = true; // Nodo libre en la estructura myFileSystem
+	node->fileSize = 0;
+	node->numBlocks = 0;
+	node->modificationTime = time(NULL);
+	
+	myFileSystem.numFreeNodes++; // Actualizamos el numero de nodos libres
+	
+	updateDirectory(&myFileSystem);
+	updateNode(&myFileSystem, idxNode, node);
+	
+	free(node);
+	
+	updateBitmap(&myFileSystem);
+	
+	return 0;
+}
+
+int read(const char *, char *, size_t, off_t, struct fuse_file_info *){
+}
 
 struct fuse_operations myFS_operations = {
 	.getattr	= my_getattr,					// Obtain attributes from a file
@@ -478,5 +511,7 @@ struct fuse_operations myFS_operations = {
 	.write		= my_write,						// Write data into a file already opened
 	.release	= my_release,					// Close an opened file
 	.mknod		= my_mknod,						// Create a new file
+	.unlink		= my_unlink,
+	.read		= my_read
 };
 
