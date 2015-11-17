@@ -471,36 +471,68 @@ static int my_truncate(const char *path, off_t size) {
 
 static int my_unlink(const char *path){
 	
-	int idxNode;
+	int idxNode, idxFile;
 	
-	if((idxNode = findFileByName(&myFileSystem, (char *)path + 1)) == -1){ // Buscar path en el directorio del SF
+	if((idxFile = findFileByName(&myFileSystem, (char *)path + 1)) == -1){ // Buscar path en el directorio del SF
 		return -ENOENT;
 	}
 	
-	resizeNode(idxNode, 0); // truncar el fichero
-	
-	myFileSystem.directory.files[idxNode].freeFile = true; // Liberamos el archivo del directorio
-	myFileSystem.directory.numFiles--; // Actualizamos el contador de archivos del directorio
-	
+	idxNode = myFileSystem.directory.files[idxFile].nodeIdx;
 	NodeStruct *node = myFileSystem.nodes[idxNode];
-	node->freeNode = true; // Nodo libre en la estructura myFileSystem
+	
+	resizeNode(idxNode, 0);
+	node->freeNode = true;
 	node->fileSize = 0;
 	node->numBlocks = 0;
 	node->modificationTime = time(NULL);
 	
-	myFileSystem.numFreeNodes++; // Actualizamos el numero de nodos libres
+	myFileSystem.directory.files[idxFile].freeFile = true;
+	myFileSystem.directory.numFiles--;	
+	myFileSystem.numFreeNodes++;
 	
+	updateBitmap(&myFileSystem);
 	updateDirectory(&myFileSystem);
 	updateNode(&myFileSystem, idxNode, node);
 	
 	free(node);
-	
-	updateBitmap(&myFileSystem);
-	
+
 	return 0;
 }
 
-int read(const char *, char *, size_t, off_t, struct fuse_file_info *){
+static int my_read (const char *fd_origen, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
+	
+	char buffer[BLOCK_SIZE_BYTES];
+	int bytes2Read, totalRead = 0;
+	
+	NodeStruct *node = myFileSystem.nodes[fi->fh];
+
+	fprintf(stderr, "--->>>my_read: path %s, size %zu, offset %jd, fh %"PRIu64"\n", fd_origen, size, (intmax_t)offset, fi->fh);
+	
+	if(size + offset > node->fileSize){
+		bytes2Read = node->fileSize - offset;
+	}else{
+		bytes2Read = size;
+	}	
+	
+	while(totalRead < bytes2Read){
+		int i, currentBlock, offBlock;
+		
+		currentBlock = node->blocks[offset / BLOCK_SIZE_BYTES];
+		offBlock = offset % BLOCK_SIZE_BYTES;
+		
+		if (lseek(myFileSystem.fdVirtualDisk, currentBlock * BLOCK_SIZE_BYTES, SEEK_SET) == (off_t) - 1 ||
+		read(myFileSystem.fdVirtualDisk, &buffer, BLOCK_SIZE_BYTES) == -1){
+			perror("Failed lseek/read in my_read");
+			return -EIO;
+		}
+		
+		for(i=offBlock; (i<BLOCK_SIZE_BYTES) && (totalRead<bytes2Read); i++){
+			buf[totalRead++] = buffer[i];
+		}
+		offset+=i;
+	}
+	
+	return totalRead;
 }
 
 struct fuse_operations myFS_operations = {
