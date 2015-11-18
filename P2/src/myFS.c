@@ -284,25 +284,119 @@ int updateSuperBlock(MyFileSystem *myFileSystem) {
 
 int readBitmap(MyFileSystem *myFileSystem)
 {
-	return -1;
+	int i;
+	
+	if(lseek(myFileSystem->fdVirtualDisk, BLOCK_SIZE_BYTES * BITMAP_IDX, SEEK_SET) == (off_t) - 1) {
+		perror("Failed lseek in readBitmap");
+		return -1;
+	}
+	
+	printf(">>BITMAP_IDX: %d\n", BITMAP_IDX);
+	printf(">>SUPERBLOCK_IDX: %d\n", SUPERBLOCK_IDX);
+	printf(">>DIRECTORY_IDX %d\n", DIRECTORY_IDX);
+	for(i = 3; i < 3 + MAX_BLOCKS_WITH_NODES; i++) {
+		printf(">>MAX_BLOCKS_WITH_NODES %d\n", i);
+	}
+	
+	for(i = 0; i < NUM_BITS; i++) {
+		read(myFileSystem->fdVirtualDisk, &myFileSystem->bitMap[i], sizeof(BIT));
+		if(myFileSystem->bitMap[i] == 1){
+			printf(">>Bitmap position %d: %d\n", i, myFileSystem->bitMap[i]);
+		}
+	}
+	
+	return 0;
 }
-
-
 
 int readDirectory(MyFileSystem* myFileSystem)
 {
-	return -1;
+	if(lseek(myFileSystem->fdVirtualDisk, BLOCK_SIZE_BYTES*2, SEEK_SET) == (off_t) - 1) {
+		perror("Failed lseek in readDirectory");
+		return -1;
+	}
+	
+	//Read numFiles
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->directory.numFiles, sizeof(int))== -1 ){
+		perror("Failed reading numFiles in readDirectory");
+		return -1;
+	}
+	printf(">>NumFiles: %d\n", myFileSystem->directory.numFiles);
+	
+	int i;
+	for(i = 0; i < MAX_FILES_PER_DIRECTORY; i++){
+		
+		if(read(myFileSystem->fdVirtualDisk, &myFileSystem->directory.files[i], sizeof(FileStruct)) != sizeof(FileStruct)){
+			perror("Failed reading files in readDirectory");
+			return -1;
+		}
+	}
+	
+	return 0;
 }
 
 
 int readSuperblock(MyFileSystem* myFileSystem)
 {
-	return -1;
+	if(lseek(myFileSystem->fdVirtualDisk, 0, SEEK_SET) == (off_t) - 1) {
+		perror("Failed lseek in readSuperBlock");
+		return -1;
+	}
+	
+	printf("Leyendo Superbloque\n");
+	
+	//Read creationTime
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->superBlock.creationTime, sizeof(time_t))== -1 ){
+		perror("Failed reading creationTime in readSuperBlock");
+		return -1;
+	}
+	printf(">>Fecha de creacion: %d\n", (int)myFileSystem->superBlock.creationTime);
+	
+	//Read diskSizeInBlocks
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->superBlock.diskSizeInBlocks, sizeof(int))== -1 ){
+		perror("Failed reading diskSizeInBlocks in readSuperBlock");
+		return -1;
+	}
+	printf(">>DiskSizeInBlocks: %d\n", myFileSystem->superBlock.diskSizeInBlocks);
+	
+	//Read numOfFreeBlocks
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->superBlock.numOfFreeBlocks, sizeof(int))== -1 ){
+		perror("Failed reading numOfFreeBlocks in readSuperBlock");
+		return -1;
+	}
+	printf(">>NumOfFreeBlocks: %d\n", myFileSystem->superBlock.numOfFreeBlocks);
+	
+	//Read blockSize
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->superBlock.blockSize, sizeof(int))== -1 ){
+		perror("Failed reading blockSize in readSuperBlock");
+		return -1;
+	}
+	printf(">>BlockSize: %d\n", myFileSystem->superBlock.blockSize);
+	
+	//Read maxLenFileName
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->superBlock.maxLenFileName, sizeof(int))== -1 ){
+		perror("Failed reading maxLenFileName in readSuperBlock");
+		return -1;
+	}
+	printf(">>MaxLenFileName: %d\n", myFileSystem->superBlock.maxLenFileName);
+	
+	//Read maxBlocksPerFile
+	if(read(myFileSystem->fdVirtualDisk, &myFileSystem->superBlock.maxBlocksPerFile, sizeof(int))== -1 ){
+		perror("Failed reading maxBlocksPerFile in readSuperBlock");
+		return -1;
+	}
+	printf(">>MaxBlocksPerFile: %d\n", myFileSystem->superBlock.maxBlocksPerFile);
+	
+	return 0;
 }
 
 int readInodes(MyFileSystem* myFileSystem)
 {
-	return -1;
+	printf(">>>Read Inodes\n");
+	if(initializeNodes(myFileSystem) != 0){
+		
+		return -1;
+	}
+	return 0;
 }
 
 int myMount(MyFileSystem *myFileSystem, char *backupFileName){
