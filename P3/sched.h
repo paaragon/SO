@@ -111,16 +111,19 @@ typedef struct sched_class {
 /* Scheduling class descriptors */
 extern sched_class_t rr_sched;
 extern sched_class_t sjf_sched;
+extern sched_class_t fcfs_sched;
+
 
 /* Numerical IDs for the available scheduling algorithms */
 enum {
     RR_SCHED,
     SJF_SCHED,
+    FCFS_SCHED,
     NR_AVAILABLE_SCHEDULERS
 };
 
 typedef struct sched_choice {
-        int sched_id;
+    int sched_id;
 	char* sched_name;
 	sched_class_t* sched_class;
 }sched_choice_t;
@@ -129,6 +132,7 @@ typedef struct sched_choice {
 static const sched_choice_t available_schedulers[NR_AVAILABLE_SCHEDULERS]={
     {RR_SCHED,"RR",&rr_sched},
     {SJF_SCHED,"SJF",&sjf_sched},
+    {FCFS_SCHED,"FCFS",&fcfs_sched}
 };
 
 
