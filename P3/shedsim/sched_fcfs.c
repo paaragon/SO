@@ -47,16 +47,20 @@ static void enqueue_task_fcfs(task_t* t,int cpu, int runnable) {
 static void task_tick_fcfs(runqueue_t* rq,int cpu){
 
     task_t* current=rq->cur_task;
-
-	/* ...A implementar... */
+        
+    if (current->runnable_ticks_left==1) 
+        rq->nr_runnable--; // The task is either exiting or going to sleep right now   
 }
 
 static task_t* steal_task_fcfs(runqueue_t* rq,int cpu){
     task_t* t=tail_slist(&rq->tasks);
     
-	/* ...A implementar... */
-	
-    return t;    
+    if (t) {
+        remove_slist(&rq->tasks,t);
+        t->on_rq=FALSE;
+        rq->nr_runnable--;
+    }
+    return t; 
 }
     
 
