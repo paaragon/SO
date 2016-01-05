@@ -1,0 +1,21 @@
+(t0): New task P3
+(t0): P3 running
+(t1): P3 running
+(t2): P3 running
+(t3): P3 running
+(t4): P3 running
+(t4): Context switch (P3)<->(idle)
+(t5): idle running
+(t6): idle running
+(t7): idle running
+(t8): idle running
+(t8): Task P4 migrated from CPU 0 to CPU 2 
+(t8): Context switch (idle)<->(P4)
+(t9): P4 running
+(t10): Task P4 goes to sleep until (t11)
+(t9): Context switch (P4)<->(idle)
+(t10): idle running
+==================
+P3	0	5	running
+P4	9	10	running
+P4	10	11	I/O

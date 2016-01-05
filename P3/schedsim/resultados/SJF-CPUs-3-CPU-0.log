@@ -1,0 +1,26 @@
+(t0): New task P1
+(t0): P1 running
+(t1): Task P1 goes to sleep until (t6)
+(t0): Context switch (P1)<->(idle)
+(t1): idle running
+(t2): idle running
+(t3): New task P4
+(t2): Context switch (idle)<->(P4)
+(t3): P4 running
+(t4): P4 running
+(t5): P4 running
+(t6): Task P4 goes to sleep until (t8)
+(t6): task P1 awoken
+(t5): Context switch (P4)<->(P1)
+(t6): P1 running
+(t7): P1 running
+(t8): task P4 awoken
+(t8): P1 running
+(t9): P1 running
+(t9): Context switch (P1)<->(idle)
+==================
+P1	0	1	running
+P1	1	6	I/O
+P1	6	10	running
+P4	3	6	running
+P4	6	8	I/O
