@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# Creamos carpeta resultados, eliminamos si existe
+# Creamos la carpeta resultados
 if test -d ./resultados; then
     rm -r ./resultados
 fi
 mkdir ./resultados
 
 # Solicitamos datos al usuario
+
+# Ejemplos a simular
 echo -n "Ejemplo a simular: "
 read example
 if [ ! -f $example ] ; then
@@ -17,6 +19,7 @@ if [ ! -f $example ] ; then
 	done
 fi
 
+# Numero maximo de CPUs
 echo -n "Numero maximo CPUs: "
 read maxCPUs
 if [ $maxCPUs -gt 8 ] ; then
@@ -35,8 +38,7 @@ for nameSched in RR SJF FCFS PRIO ; do
 		./schedsim -s $nameSched -i $example -n $i
 		j=0
 		while [ $j -lt $i ] ; do
-			# Movemos log modificando nombre, evitando sobrescrituras y ordenacion mas amigable
-    			mv CPU_$j.log resultados/$nameSched-CPUs-$i-CPU-$j.log
+    		mv CPU_$j.log resultados/$nameSched-CPUs-$i-CPU-$j.log
 			cd ../gantt-gplot
 			# Generamos grafico de Gantt		
 			./generate_gantt_chart ../schedsim/resultados/$nameSched-CPUs-$i-CPU-$j.log
