@@ -1,5 +1,33 @@
 #include "sched.h"
 
+/* Global PRIO quantum parameter */
+int prio_quantum=1;
+
+/* Structure to store PRIO thread-specific fields */
+struct prio_data {
+     int remaining_ticks_slice;  
+};
+
+static int task_new_prio(task_t* t){
+    struct prio_data* cs_data=malloc(sizeof(struct prio_data));
+
+    if (!cs_data)
+        return 1; /* Cannot reserve memory */
+
+
+    // initialize the quantum
+    cs_data->remaining_ticks_slice=prio_quantum;
+    t->tcs_data=cs_data;
+    return 0;
+}
+
+static void task_free_prio(task_t* t){
+    if (t->tcs_data){
+        free(t->tcs_data);
+        t->tcs_data=NULL;
+    }
+}
+
 static task_t* pick_next_task_prio(runqueue_t* rq,int cpu) {
     task_t* t=head_slist(&rq->tasks); //List sorted by Priority (just pick the first one)
     
@@ -41,7 +69,7 @@ static void enqueue_task_prio(task_t* t,int cpu, int runnable) {
         rq->nr_runnable++;
         t->last_cpu=cpu;	
         
-        /* Trigger a preemption if this task has a shorter CPU burst than current */
+        /* Trigger a preemption if this task has a shorter CPU priority than current */
         if (preemptive_scheduler && !is_idle_task(current) && t->prio>current->prio) {
             rq->need_resched=TRUE;
             current->flags|=TF_INSERT_FRONT; /* To avoid unfair situations in the event
@@ -55,8 +83,16 @@ static void task_tick_prio(runqueue_t* rq,int cpu){
     
     task_t* current=rq->cur_task;
     
+    struct prio_data* cs_data=(struct prio_data*)current->tcs_data;
+
+    
     if (is_idle_task(current))
         return;
+    
+    cs_data->remaining_ticks_slice--;
+    
+    if (cs_data->remaining_ticks_slice<=0)
+        rq->need_resched=TRUE;
     
     if (current->runnable_ticks_left==1) 
         rq->nr_runnable--; // The task is either exiting or going to sleep right now    
@@ -74,6 +110,8 @@ static task_t* steal_task_prio(runqueue_t* rq,int cpu){
 }
 
 sched_class_t prio_sched={
+    .task_new=task_new_prio,
+    .task_free=task_free_prio,
     .pick_next_task=pick_next_task_prio,
     .enqueue_task=enqueue_task_prio,
     .task_tick=task_tick_prio,
