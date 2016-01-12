@@ -1,6 +1,6 @@
 #!/usr/bin/make
 TARGET=schedsim
-SOURCES=main.c sched.c slist.c barrier.c sched_rr.c sched_sjf.c sched_fcfs.c sched_prio.c
+SOURCES=main.c sched.c slist.c barrier.c sched_rr.c sched_sjf.c sched_fcfs.c sched_prio.c sched_rr_dyn.c sched_multiQ_RR.c sched_mix.c
 
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 MY_INCLUDES=.

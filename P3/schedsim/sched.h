@@ -113,6 +113,9 @@ extern sched_class_t rr_sched;
 extern sched_class_t sjf_sched;
 extern sched_class_t fcfs_sched;
 extern sched_class_t prio_sched;
+extern sched_class_t rr_dyn_sched;
+extern sched_class_t multiQRR_sched;
+extern sched_class_t mix_sched;
 
 
 /* Numerical IDs for the available scheduling algorithms */
@@ -121,6 +124,9 @@ enum {
     SJF_SCHED,
     FCFS_SCHED,
     PRIO_SCHED,
+    RR_DYN_SCHED,
+    MULTIQ_RR_SCHED,
+    MIX_SCHED,
     NR_AVAILABLE_SCHEDULERS
 };
 
@@ -135,7 +141,10 @@ static const sched_choice_t available_schedulers[NR_AVAILABLE_SCHEDULERS]={
     {RR_SCHED,"RR",&rr_sched},
     {SJF_SCHED,"SJF",&sjf_sched},
     {FCFS_SCHED,"FCFS",&fcfs_sched},
-    {PRIO_SCHED,"PRIO",&prio_sched}
+    {PRIO_SCHED,"PRIO",&prio_sched},
+    {RR_DYN_SCHED,"RR-DYN",&rr_dyn_sched},
+    {MULTIQ_RR_SCHED,"MULTIQ-RR",&multiQRR_sched},
+    {MIX_SCHED,"MIX",&mix_sched}
 };
 
 
